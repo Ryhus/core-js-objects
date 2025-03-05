@@ -138,9 +138,9 @@ function makeImmutable(obj) {
  */
 function makeWord(lettersObject) {
   const arr = [];
-  Object.entries(lettersObject).forEach(function (element) {
+  Object.entries(lettersObject).forEach(function processObj(element) {
     const [letter, positions] = element;
-    positions.forEach(function (position) {
+    positions.forEach(function processPositions(position) {
       arr[position] = letter;
     });
   });
@@ -190,7 +190,7 @@ function Rectangle(width, height) {
   this.width = width;
   this.height = height;
 
-  this.getArea = function () {
+  this.getArea = function area() {
     return this.width * this.height;
   };
 }
