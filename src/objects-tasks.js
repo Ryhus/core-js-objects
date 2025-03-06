@@ -364,32 +364,124 @@ function group(array, keySelector, valueSelector) {
  */
 
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  element(value) {
+    return this.createSelector().element(value);
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    return this.createSelector().id(value);
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    return this.createSelector().class(value);
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    return this.createSelector().attr(value);
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    return this.createSelector().pseudoClass(value);
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    return this.createSelector().pseudoElement(value);
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    const combinedSelector = `${selector1.stringify()} ${combinator} ${selector2.stringify()}`;
+    return this.createSelector(combinedSelector);
+  },
+
+  createSelector(initialSelector = '') {
+    const builder = {
+      selector: initialSelector,
+      hasElement: false,
+      hasId: false,
+      hasPseudoElement: false,
+      order: [],
+
+      element(value) {
+        if (this.hasElement) {
+          throw new Error(
+            'Element, id and pseudo-element should not occur more then one time inside the selector'
+          );
+        }
+        this.selector += value;
+        this.hasElement = true;
+        this.validateOrder('element');
+        return this;
+      },
+
+      id(value) {
+        if (this.hasId) {
+          throw new Error(
+            'Element, id and pseudo-element should not occur more then one time inside the selector'
+          );
+        }
+        this.selector += `#${value}`;
+        this.hasId = true;
+        this.validateOrder('id');
+        return this;
+      },
+
+      class(value) {
+        this.selector += `.${value}`;
+        this.validateOrder('class');
+        return this;
+      },
+
+      attr(value) {
+        this.selector += `[${value}]`;
+        this.validateOrder('attr');
+        return this;
+      },
+
+      pseudoClass(value) {
+        this.selector += `:${value}`;
+        this.validateOrder('pseudoClass');
+        return this;
+      },
+
+      pseudoElement(value) {
+        if (this.hasPseudoElement) {
+          throw new Error(
+            'Element, id and pseudo-element should not occur more then one time inside the selector'
+          );
+        }
+        this.selector += `::${value}`;
+        this.hasPseudoElement = true;
+        this.validateOrder('pseudoElement');
+        return this;
+      },
+
+      validateOrder(currentType) {
+        const orderMap = {
+          element: 1,
+          id: 2,
+          class: 3,
+          attr: 4,
+          pseudoClass: 5,
+          pseudoElement: 6,
+        };
+
+        if (
+          this.order.length > 0 &&
+          orderMap[currentType] < orderMap[this.order[this.order.length - 1]]
+        ) {
+          throw new Error(
+            'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+          );
+        }
+        this.order.push(currentType);
+      },
+
+      stringify() {
+        return this.selector;
+      },
+    };
+
+    return builder;
   },
 };
 
